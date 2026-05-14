@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Past Simple Ninja Sort</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    overflow:hidden;
+    font-family:Arial, sans-serif;
+    background:linear-gradient(135deg,#141e30,#243b55);
+    height:100vh;
+    color:white;
+}
+
+/* Animated Background */
+
+body::before{
+    content:"";
+    position:absolute;
+    width:200%;
+    height:200%;
+    background:
+    radial-gradient(circle, rgba(255,255,255,0.12) 2px, transparent 2px);
+    background-size:50px 50px;
+    animation:bgMove 25s linear infinite;
+}
+
+@keyframes bgMove{
+    from{transform:translate(0,0);}
+    to{transform:translate(-250px,-250px);}
+}
+
+/* Top Bar */
+
+#topBar{
+    position:absolute;
+    top:10px;
+    left:0;
+    width:100%;
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    z-index:20;
+}
+
+/* Scores */
+
+.teamScore{
+    width:220px;
+    text-align:center;
+    padding:12px;
+    border-radius:20px;
+    font-size:30px;
+    font-weight:bold;
+    box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+
+.teamA{
+    background:#0984e3;
+}
+
+.teamB{
+    background:#d63031;
+}
+
+/* Timer */
+
+#timer{
+    font-size:70px;
+    font-weight:bold;
+    background:#fdcb6e;
+    color:black;
+    padding:15px 45px;
+    border-radius:30px;
+    box-shadow:0 0 25px gold;
+    animation:pulse 1s infinite;
+}
+
+@keyframes pulse{
+    0%{transform:scale(1);}
+    50%{transform:scale(1.08);}
+    100%{transform:scale(1);}
+}
+
+/* Split Screen */
+
+.side{
+    position:absolute;
+    top:0;
+    width:50%;
+    height:100%;
+}
+
+.leftSide{
+    left:0;
+    border-right:5px dashed rgba(255,255,255,0.3);
+}
+
+.rightSide{
+    right:0;
+}
+
+.side h2{
+    text-align:center;
+    margin-top:120px;
+    font-size:45px;
+    text-shadow:3px 3px 10px black;
+}
+
+/* Baskets */
+
+.basket{
+    position:absolute;
+    bottom:30px;
+    width:260px;
+    height:150px;
+    border-radius:30px;
+    text-align:center;
+    line-height:150px;
+    font-size:28px;
+    font-weight:bold;
+    color:white;
+    border:5px dashed white;
+    box-shadow:0 0 25px rgba(255,255,255,0.5);
+}
+
+.regularBasket{
+    background:#00b894;
+}
+
+.irregularBasket{
+    background:#e17055;
+}
+
+.leftSide .regularBasket{
+    left:40px;
+}
+
+.leftSide .irregularBasket{
+    right:40px;
+}
+
+.rightSide .regularBasket{
+    left:40px;
+}
+
+.rightSide .irregularBasket{
+    right:40px;
+}
+
+/* Word Cards */
+
+.word{
+    position:absolute;
+    width:150px;
+    height:75px;
+    border-radius:20px;
+    text-align:center;
+    line-height:75px;
+    font-size:24px;
+    font-weight:bold;
+    cursor:grab;
+    user-select:none;
+    box-shadow:0 0 20px black;
+    animation:float 2s infinite ease-in-out;
+    z-index:10;
+}
+
+.word:nth-child(even){
+    background:#fdcb6e;
+    color:black;
+}
+
+.word:nth-child(odd){
+    background:#74b9ff;
+    color:white;
+}
+
+@keyframes float{
+    0%{transform:translateY(0px);}
+    50%{transform:translateY(-10px);}
+    100%{transform:translateY(0px);}
+}
+
+/* Popup */
+
+#popup{
+    position:absolute;
+    top:45%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:80px;
+    font-weight:bold;
+    display:none;
+    z-index:100;
+    text-shadow:0 0 20px black;
+}
+
+/* Game Over */
+
+#gameOver{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,0.95);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    z-index:200;
+}
+
+#gameOver h1{
+    font-size:90px;
+    color:gold;
+}
+
+#winnerText{
+    font-size:40px;
+    margin-bottom:30px;
+    text-align:center;
+}
+
+#restartBtn{
+    padding:20px 45px;
+    font-size:30px;
+    border:none;
+    border-radius:25px;
+    cursor:pointer;
+    background:#00cec9;
+    font-weight:bold;
+}
+
+/* Shake */
+
+@keyframes shake{
+    0%{transform:translateX(0);}
+    25%{transform:translateX(-10px);}
+    50%{transform:translateX(10px);}
+    75%{transform:translateX(-10px);}
+    100%{transform:translateX(0);}
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="topBar">
+
+    <div class="teamScore teamA">
+        🔵 TEAM A
+        <div id="scoreA">0</div>
+    </div>
+
+    <div id="timer">60</div>
+
+    <div class="teamScore teamB">
+        🔴 TEAM B
+        <div id="scoreB">0</div>
+    </div>
+
+</div>
+
+<!-- LEFT SIDE -->
+
+<div class="side leftSide">
+
+    <h2>TEAM A</h2>
+
+    <div class="basket regularBasket" id="regularA">
+        REGULAR (-ed)
+    </div>
+
+    <div class="basket irregularBasket" id="irregularA">
+        IRREGULAR
+    </div>
+
+</div>
+
+<!-- RIGHT SIDE -->
+
+<div class="side rightSide">
+
+    <h2>TEAM B</h2>
+
+    <div class="basket regularBasket" id="regularB">
+        REGULAR (-ed)
+    </div>
+
+    <div class="basket irregularBasket" id="irregularB">
+        IRREGULAR
+    </div>
+
+</div>
+
+<!-- POPUP -->
+
+<div id="popup"></div>
+
+<!-- GAME OVER -->
+
+<div id="gameOver">
+
+    <h1>💥 TIME'S UP 💥</h1>
+
+    <h2 id="winnerText"></h2>
+
+    <button id="restartBtn">PLAY AGAIN</button>
+
+</div>
+
+<script>
+
+/* WORDS */
+
+const regular = [
+"crawl","name","cry","develop","play",
+"record","collect","deliver","use","watch"
+];
+
+const irregular = [
+"fall","take","have","catch","feed",
+"go","write","keep","swim","run"
+];
+
+const allWords = [...regular,...irregular];
+
+let scoreA = 0;
+let scoreB = 0;
+let timeLeft = 60;
+
+/* CREATE WORDS */
+
+allWords.forEach(word=>{
+    createWord(word);
+});
+
+function createWord(word){
+
+    const div = document.createElement("div");
+
+    div.className = "word";
+    div.innerText = word;
+
+    div.style.left = Math.random()*80 + "%";
+    div.style.top = Math.random()*55 + 20 + "%";
+
+    document.body.appendChild(div);
+
+    dragElement(div);
+
+    moveRandom(div);
+
+}
+
+/* MOVE WORDS */
+
+function moveRandom(el){
+
+    setInterval(()=>{
+
+        el.style.left = Math.random()*80 + "%";
+        el.style.top = Math.random()*55 + 20 + "%";
+
+    },3000);
+
+}
+
+/* DRAG */
+
+function dragElement(el){
+
+    let offsetX, offsetY;
+
+    el.onmousedown = dragMouseDown;
+
+    function dragMouseDown(e){
+
+        e.preventDefault();
+
+        offsetX = e.clientX - el.offsetLeft;
+        offsetY = e.clientY - el.offsetTop;
+
+        document.onmouseup = closeDrag;
+        document.onmousemove = drag;
+
+    }
+
+    function drag(e){
+
+        el.style.left = (e.clientX-offsetX)+"px";
+        el.style.top = (e.clientY-offsetY)+"px";
+
+    }
+
+    function closeDrag(){
+
+        document.onmouseup = null;
+        document.onmousemove = null;
+
+        checkDrop(el);
+
+    }
+
+}
+
+/* CHECK DROP - FIXED */
+
+function checkDrop(el){
+
+    const word = el.innerText;
+
+    const baskets = {
+
+        regularA:document.getElementById("regularA").getBoundingClientRect(),
+        irregularA:document.getElementById("irregularA").getBoundingClientRect(),
+
+        regularB:document.getElementById("regularB").getBoundingClientRect(),
+        irregularB:document.getElementById("irregularB").getBoundingClientRect()
+
+    };
+
+    const rect = el.getBoundingClientRect();
+
+    for(let key in baskets){
+
+        let b = baskets[key];
+
+        if(
+            rect.left > b.left &&
+            rect.right < b.right &&
+            rect.top > b.top &&
+            rect.bottom < b.bottom
+        ){
+
+            /* CHECK IRREGULAR FIRST */
+
+            if(key.includes("irregular")){
+
+                if(irregular.includes(word)){
+
+                    correct(el,key);
+
+                }else{
+
+                    wrong(el,key);
+
+                }
+
+                return;
+
+            }
+
+            /* CHECK REGULAR SECOND */
+
+            if(key.includes("regular")){
+
+                if(regular.includes(word)){
+
+                    correct(el,key);
+
+                }else{
+
+                    wrong(el,key);
+
+                }
+
+                return;
+
+            }
+
+        }
+
+    }
+
+}
+
+/* CORRECT */
+
+function correct(el,key){
+
+    if(key.includes("A")){
+
+        scoreA++;
+        document.getElementById("scoreA").innerText = scoreA;
+
+    }else{
+
+        scoreB++;
+        document.getElementById("scoreB").innerText = scoreB;
+
+    }
+
+    showPopup("👏 HURRAY!", "#00ff99");
+
+    playClap();
+
+    createFireworks();
+
+    el.remove();
+
+}
+
+/* WRONG */
+
+function wrong(el,key){
+
+    if(key.includes("A")){
+
+        scoreA--;
+        document.getElementById("scoreA").innerText = scoreA;
+
+    }else{
+
+        scoreB--;
+        document.getElementById("scoreB").innerText = scoreB;
+
+    }
+
+    showPopup("💥 WRONG!", "red");
+
+    playBoom();
+
+    el.style.animation = "shake 0.5s";
+
+}
+
+/* POPUP */
+
+function showPopup(text,color){
+
+    const popup = document.getElementById("popup");
+
+    popup.innerText = text;
+    popup.style.color = color;
+    popup.style.display = "block";
+
+    setTimeout(()=>{
+        popup.style.display = "none";
+    },1000);
+
+}
+
+/* CORRECT SOUND */
+
+function playClap(){
+
+    const ctx = new(window.AudioContext || window.webkitAudioContext)();
+
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+
+    osc1.type = "triangle";
+    osc1.frequency.value = 800;
+
+    gain1.gain.value = 0.2;
+
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+
+    osc1.start();
+    osc1.stop(ctx.currentTime + 0.1);
+
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+
+    osc2.type = "triangle";
+    osc2.frequency.value = 1000;
+
+    gain2.gain.value = 0.2;
+
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+
+    osc2.start(ctx.currentTime + 0.12);
+    osc2.stop(ctx.currentTime + 0.22);
+
+}
+
+/* WRONG SOUND */
+
+function playBoom(){
+
+    const ctx = new(window.AudioContext || window.webkitAudioContext)();
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "square";
+
+    osc.frequency.setValueAtTime(400, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.5);
+
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+
+}
+
+/* BIG TIME OUT SOUND */
+
+function playBigBoom(){
+
+    const ctx = new(window.AudioContext || window.webkitAudioContext)();
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sawtooth";
+
+    osc.frequency.setValueAtTime(200, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 1);
+
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 1);
+
+}
+
+/* FIREWORKS */
+
+function createFireworks(){
+
+    for(let i=0;i<20;i++){
+
+        const firework = document.createElement("div");
+
+        firework.style.position = "absolute";
+        firework.style.width = "12px";
+        firework.style.height = "12px";
+        firework.style.borderRadius = "50%";
+
+        firework.style.background =
+        `hsl(${Math.random()*360},100%,50%)`;
+
+        firework.style.left =
+        Math.random()*window.innerWidth + "px";
+
+        firework.style.top =
+        Math.random()*window.innerHeight + "px";
+
+        firework.style.zIndex = "999";
+
+        document.body.appendChild(firework);
+
+        const x = (Math.random()-0.5)*400;
+        const y = (Math.random()-0.5)*400;
+
+        firework.animate([
+
+            {
+                transform:"translate(0,0) scale(1)",
+                opacity:1
+            },
+
+            {
+                transform:`translate(${x}px,${y}px) scale(0)`,
+                opacity:0
+            }
+
+        ],{
+
+            duration:1200,
+            easing:"ease-out"
+
+        });
+
+        setTimeout(()=>{
+
+            firework.remove();
+
+        },1200);
+
+    }
+
+}
+
+/* TIMER */
+
+const timer = setInterval(()=>{
+
+    timeLeft--;
+
+    document.getElementById("timer").innerText = timeLeft;
+
+    if(timeLeft <= 10){
+
+        document.getElementById("timer").style.background = "red";
+        document.getElementById("timer").style.color = "white";
+
+    }
+
+    if(timeLeft <= 0){
+
+        clearInterval(timer);
+
+        endGame();
+
+    }
+
+},1000);
+
+/* END GAME */
+
+function endGame(){
+
+    playBigBoom();
+
+    document.getElementById("gameOver").style.display = "flex";
+
+    let winner = "";
+
+    if(scoreA > scoreB){
+
+        winner = "🏆 TEAM A WINS!";
+
+    }else if(scoreB > scoreA){
+
+        winner = "🏆 TEAM B WINS!";
+
+    }else{
+
+        winner = "🤝 DRAW GAME!";
+
+    }
+
+    document.getElementById("winnerText").innerText =
+    winner + " | Team A: " + scoreA + " - Team B: " + scoreB;
+
+    /* MASSIVE FIREWORKS */
+
+    for(let i=0;i<25;i++){
+
+        setTimeout(()=>{
+
+            createFireworks();
+
+        },i*200);
+
+    }
+
+}
+
+/* RESTART */
+
+document.getElementById("restartBtn").onclick = ()=>{
+
+    location.reload();
+
+};
+
+</script>
+
+</body>
+</html>
